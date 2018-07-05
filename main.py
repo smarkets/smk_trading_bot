@@ -9,6 +9,7 @@ import time
 import requests
 
 import utils
+from config import configuration
 from client import SmarketsClient
 
 
@@ -30,10 +31,10 @@ class TradingBot:
                 self.authenticator = utils.Authenticator(self.smk_client)
                 self.authenticator.start()
             # if not self.the_bot or not self.the_bot.is_alive():
-                # self.the_bot = trading.DumbBot(auth_lock, auth_token)
+                # self.the_bot = trading.DumbBot(self.smk_client)
                 # self.the_bot.start()
-            log.info(f'babysitting threads for {utils.SLEEP_INTERVAL} seconds')
-            time.sleep(utils.SLEEP_INTERVAL)
+            log.info(f'babysitting threads for {configuration["misc"]["sleep_interval"]} seconds')
+            time.sleep(configuration["misc"]["sleep_interval"])
 
 def main():
     TradingBot().run()

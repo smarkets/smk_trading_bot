@@ -1,0 +1,13 @@
+[auth]
+login = "your_login_here"
+password = "password_plz"
+
+[api]
+base_url = "https://api.smarkets.com/v3/"
+# base_url = "https://api.smarkets-dev.com/v3/"  # for sandbox
+chunk_size = 20
+
+[misc]
+sleep_interval = 10
+reauth_sleep_interval = 600
+ticker_plant_path = "tickerplant.db"

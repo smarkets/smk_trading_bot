@@ -6,16 +6,8 @@ from typing import Any, Dict, List
 
 import requests
 
-### CONFIG
+from config import configuration
 
-BASE_URL = 'https://api.smarkets.com/v3/'
-LOGIN = ''
-PASSWORD = ''
-
-### RUNTIME CONSTANTS
-CHUNK_SIZE = 20
-
-# fileConfig('logging.config')
 log = logging.getLogger(__name__)
 
 class SmarketsClient:
@@ -29,14 +21,21 @@ class SmarketsClient:
     def init_session(self):
         log.info('initiating session')
         with self.auth_lock:
-            response = requests.post(f'{BASE_URL}sessions/', json={'username': LOGIN, 'password': PASSWORD}).json()
+            response = requests.post(
+                f'{configuration["api"]["base_url"]}sessions/',
+                json={
+                    'username': configuration['auth']['login'],
+                    'password': configuration['auth']['password'],
+                },
+            ).json()
             self.auth_token = response.get('token')
         log.info(f'new auth token: {self.auth_token}')
 
     def reauth_session(self):
         log.info('renewing session')
         with self.auth_lock:
-            response = requests.post(f'{BASE_URL}sessions/reauth/').json()
+            response = requests.post(f'{configuration["api"]["base_url"]}sessions/reauth/').json()
+            self.auth_token = response.get('token')
         log.info(f'new auth token: {self.auth_token}')
 
     def place_bet(
@@ -47,9 +46,10 @@ class SmarketsClient:
         quantity,
         side,
     ):
+        log.info(f'placing order: m_id {market_id}: c_id {contract_id} \t {side} {quantity} @ {price}')
         with self.auth_lock:
             response = requests.post(
-                f'{BASE_URL}orders/',
+                f'{configuration["api"]["base_url"]}orders/',
                 json={
                     'market_id': market_id,
                     'contract_id': contract_id,
@@ -60,23 +60,27 @@ class SmarketsClient:
                 },
                 headers=self._auth_headers(),
             ).json()
-        log.info(response)
+        log.info(
+            f'''order placed: m_id {market_id}: c_id {contract_id} \t {side} {quantity} @ {price}|'''
+            f'''balance:{response["available_balance"]} executed:{response["total_executed_quantity"]}'''
+            f''' exposure:{response["exposure"]}'''
+        )
 
     def cancel_bet(self, order_id):
         with self.auth_lock:
             response = requests.delete(
-                f'{BASE_URL}orders/{order_id}/',
+                f'{configuration["api"]["base_url"]}orders/{order_id}/',
                 headers=self._auth_headers(),
             )
 
     def get_orders(self, states):
         orders = []
         states_to_fetch = '&'.join([f'states={state}' for state in states])
-        next_page = f'?limit={CHUNK_SIZE}&{states_to_fetch}'
+        next_page = f'?limit={configuration["api"]["chunk_size"]}&{states_to_fetch}'
         with self.auth_lock:
             while next_page:
                 response = requests.get(
-                    f'{BASE_URL}orders/{next_page}',
+                    f'{configuration["api"]["base_url"]}orders/{next_page}',
                     headers=self._auth_headers(),
                 ).json()
                 log.info(response)
@@ -96,7 +100,7 @@ class SmarketsClient:
         page_filter = f'?{states_filter}&{types_filter}&sort=id&limit={limit}'
         events = []
         while page_filter:
-            request_url = f'{BASE_URL}events/{page_filter}'
+            request_url = f'{configuration["api"]["base_url"]}events/{page_filter}'
             current_page = self._client_wrapper(request_url)
             events += current_page['events']
             page_filter = current_page['pagination']['next_page']
@@ -107,9 +111,12 @@ class SmarketsClient:
         markets = []
         event_ids = [event['id'] for event in events]
         i = 0
-        while i*CHUNK_SIZE < len(event_ids):
-            events_to_fetch = ','.join(event_ids[i*CHUNK_SIZE:(i+1)*CHUNK_SIZE])
-            request_url = f'{BASE_URL}events/{events_to_fetch}/markets/?sort=event_id,display_order&limit_by_event=1&with_volumes=true'
+        while i*configuration["api"]["chunk_size"] < len(event_ids):
+            events_to_fetch = ','.join(
+                event_ids[i*configuration["api"]["chunk_size"]:(i+1)*configuration["api"]["chunk_size"]]
+            )
+            request_url = f'''{configuration["api"]["base_url"]}events/{events_to_fetch}/markets/'''
+                        f'''?sort=event_id,display_order&limit_by_event=1&with_volumes=true'''
             markets += self._client_wrapper(request_url)['markets']
             i += 1
         return markets
@@ -117,9 +124,11 @@ class SmarketsClient:
     def get_quotes(self, market_ids):
         quotes = []
         i = 0
-        while i*CHUNK_SIZE < len(market_ids):
-            markets_to_fetch = ','.join(market_ids[i*CHUNK_SIZE:(i+1)*CHUNK_SIZE])
-            request_url = f'{BASE_URL}markets/{markets_to_fetch}/quotes/'
+        while i*configuration["api"]["chunk_size"] < len(market_ids):
+            markets_to_fetch = ','.join(
+                market_ids[i*configuration["api"]["chunk_size"]:(i+1)*configuration["api"]["chunk_size"]]
+            )
+            request_url = f'{configuration["api"]["base_url"]}markets/{markets_to_fetch}/quotes/'
             quotes += [self._client_wrapper(request_url)]
             i+=1
         quotes_result = {}
@@ -127,6 +136,28 @@ class SmarketsClient:
             for contract_id, order_book in quote_entry.items():
                 quotes_result[contract_id] = order_book
         return quotes_result
+
+    def get_accounts(self):
+        response = None
+        with self.auth_lock:
+            response = requests.get(
+                f'{configuration["api"]["base_url"]}accounts/', headers=self._auth_headers()
+            ).json()
+        return response
+
+    def get_account_activity(self, market_id=None):
+        market_filter = '' if not market_id else f'&market_id={market_id}'
+        next_page = f'?limit={configuration["api"]["chunk_size"]}{market_filter}'
+        activity = []
+        while next_page:
+            with self.auth_lock:
+                response = requests.get(
+                    f'{configuration["api"]["base_url"]}accounts/activity/{next_page}',
+                    headers=self._auth_headers(),
+                ).json()
+            activity += response['account_activity']
+            next_page = response['pagination']['next_page']
+        return activity
 
     def _client_wrapper(self, url: str) -> Dict[str, Any]:
         log.info(f'calling url: {url}')

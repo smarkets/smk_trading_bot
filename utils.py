@@ -1,19 +1,14 @@
 import logging
-from typing import Any, Dict, List
 import datetime
 import sqlite3
 import threading
 import time
-
 from logging.config import fileConfig
+from typing import Any, Dict, List
 
 import requests
 
-### RUNTIME CONSTANTS
-TICKER_PLANT_PATH = 'tickerplant.db'
-REAUTH_SLEEP_INTERVAL = 600
-SLEEP_INTERVAL = 10
-
+from config import configuration
 
 log = logging.getLogger(__name__)
 
@@ -23,7 +18,7 @@ class QuoteFetcher(threading.Thread):
         super().__init__()
 
     def _initialize_ticker_plant(self):
-        connection = sqlite3.connect(TICKER_PLANT_PATH)
+        connection = sqlite3.connect(configuration["misc"]["ticker_plant_path"])
         with connection:
             connection.execute("""
                 CREATE TABLE IF NOT EXISTS ticks (
@@ -71,7 +66,7 @@ class QuoteFetcher(threading.Thread):
                 ]),
             )
 
-        connection = sqlite3.connect(TICKER_PLANT_PATH)
+        connection = sqlite3.connect(configuration["misc"]["ticker_plant_path"])
         with connection:
             connection.executemany(
                 """
@@ -97,8 +92,8 @@ class QuoteFetcher(threading.Thread):
         while True:
             quotes = self.smk_client.get_quotes([market['id'] for market in markets])
             self._store_ticks(quotes)
-            log.info(f'collected the ticks, now sleeping for {SLEEP_INTERVAL} seconds')
-            time.sleep(SLEEP_INTERVAL)
+            log.info(f'collected the ticks, now sleeping for {configuration["misc"]["sleep_interval"]} seconds')
+            time.sleep(configuration["misc"]["sleep_interval"])
 
 
 class Authenticator(threading.Thread):
@@ -109,6 +104,5 @@ class Authenticator(threading.Thread):
     def run(self):
         self.smk_client.init_session()
         while True:
-            log.info('hej')
-            time.sleep(REAUTH_SLEEP_INTERVAL)
+            time.sleep(configuration["misc"]["reauth_sleep_interval"])
             self.smk_client.reauth_session()
