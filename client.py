@@ -16,7 +16,7 @@ class SmarketsClient:
         self.auth_token = None
 
     def _auth_headers(self):
-        return {'Authorization': 'Session-Token '+self.auth_token}
+        return {'Authorization': 'Session-Token ' + self.auth_token}
 
     def init_session(self):
         log.info('initiating session')
@@ -111,17 +111,19 @@ class SmarketsClient:
         markets = []
         event_ids = [event['id'] for event in events]
         i = 0
-        while i*configuration["api"]["chunk_size"] < len(event_ids):
+        while i * configuration["api"]["chunk_size"] < len(event_ids):
             events_to_fetch = ','.join(
                 event_ids[i*configuration["api"]["chunk_size"]:(i+1)*configuration["api"]["chunk_size"]]
             )
-            request_url = f'''{configuration["api"]["base_url"]}events/{events_to_fetch}/markets/'''
-                        f'''?sort=event_id,display_order&limit_by_event=1&with_volumes=true'''
+            request_url = (
+                f'''{configuration["api"]["base_url"]}events/{events_to_fetch}/markets/'''
+                f'''?sort=event_id,display_order&with_volumes=true'''
+            )
             markets += self._client_wrapper(request_url)['markets']
             i += 1
         return markets
 
-    def get_quotes(self, market_ids):
+    def get_quotes(self, market_ids: List[str]):
         quotes = []
         i = 0
         while i*configuration["api"]["chunk_size"] < len(market_ids):
@@ -145,7 +147,7 @@ class SmarketsClient:
             ).json()
         return response
 
-    def get_account_activity(self, market_id=None):
+    def get_account_activity(self, market_id: str=None):
         market_filter = '' if not market_id else f'&market_id={market_id}'
         next_page = f'?limit={configuration["api"]["chunk_size"]}{market_filter}'
         activity = []
