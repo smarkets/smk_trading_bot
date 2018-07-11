@@ -128,6 +128,22 @@ class SmarketsClient:
             i += 1
         return markets
 
+    def get_related_contracts(self, markets):
+        contracts = []
+        market_ids = [market['id'] for market in markets]
+        i = 0
+        chunk_size = configuration["api"]["chunk_size"]
+        while i * chunk_size < len(market_ids):
+            markets_to_fetch = ','.join(
+                market_ids[i * chunk_size:(i + 1) * chunk_size]
+            )
+            request_url = (
+                f'''{configuration["api"]["base_url"]}markets/{markets_to_fetch}/contracts/'''
+            )
+            contracts += self._client_wrapper(request_url)['contracts']
+            i += 1
+        return contracts
+
     def get_quotes(self, market_ids: List[str]):
         quotes = []
         i = 0
