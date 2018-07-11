@@ -107,6 +107,11 @@ class SmarketsClient:
 
         return events
 
+    def get_markets(self, market_ids: List[str], with_volumes: bool=False):
+        markets = ','.join(market_ids)
+        request_url = f'{configuration["api"]["base_url"]}markets/{markets}/?with_volumes={with_volumes}'
+        return self._client_wrapper(request_url).get('markets')
+
     def get_related_markets(self, events):
         markets = []
         event_ids = [event['id'] for event in events]
