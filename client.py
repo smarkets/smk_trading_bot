@@ -97,7 +97,7 @@ class SmarketsClient:
     ):
         states_filter = '&'.join([f'states={state}' for state in states])
         types_filter = '&'.join([f'types={type_}' for type_ in types])
-        page_filter = f'?{states_filter}&{types_filter}&sort=id&limit={limit}'
+        page_filter = f'?{states_filter}&{types_filter}&sort=id&limit={limit}&start_datetime_max={start_datetime_max}'
         events = []
         while page_filter:
             request_url = f'{configuration["api"]["base_url"]}events/{page_filter}'
