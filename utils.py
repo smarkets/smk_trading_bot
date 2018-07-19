@@ -3,11 +3,7 @@ import datetime
 import sqlite3
 import threading
 import time
-from logging.config import fileConfig
-from typing import Any, Dict, List
 from itertools import count
-
-import requests
 
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
@@ -134,7 +130,8 @@ class LiveQuotePlotter(threading.Thread):
             xlim = ax.get_xlim()
             ylim = ax.get_ylim()
             ax.clear()
-            df = (df.set_index(['timestamp', 'contract_id'])
+            df = (df
+                .set_index(['timestamp', 'contract_id'])
                 [['bp1', 'op1']]
                 .unstack('contract_id')
             )
@@ -147,7 +144,7 @@ class LiveQuotePlotter(threading.Thread):
                 ax.set_ylim(ylim)
             return ax.get_lines()
 
-        ani = FuncAnimation(
+        FuncAnimation(
             fig, frames, frames=count(), blit=False,
             interval=configuration['misc']['sleep_interval'] * 1000,
         )
