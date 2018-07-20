@@ -98,7 +98,7 @@ class QuoteFetcher(BaseUtility):
         self._initialize_ticker_plant()
         events = self.smk_client.get_available_events(
             ['upcoming', 'live'],
-            ['football_match'],
+            config['misc']['enabled_sports'],
             datetime.datetime.utcnow(),
             20,
         )

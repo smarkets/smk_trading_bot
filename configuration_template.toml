@@ -11,3 +11,4 @@ chunk_size = 20
 sleep_interval = 10
 reauth_sleep_interval = 600
 ticker_plant_path = "tickerplant.db"
+enabled_sports = ["football_match"]
