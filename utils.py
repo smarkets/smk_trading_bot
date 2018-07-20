@@ -13,16 +13,15 @@ from config import configuration
 
 log = logging.getLogger(__name__)
 
-
-class QuoteFetcher(threading.Thread):
+class BaseUtility(threading.Thread):
     def __init__(self, smk_client):
         self.smk_client = smk_client
+        self.connection = sqlite3.connect(configuration["misc"]["ticker_plant_path"])
         super().__init__()
 
     def _initialize_ticker_plant(self):
-        connection = sqlite3.connect(configuration["misc"]["ticker_plant_path"])
-        with connection:
-            connection.execute("""
+        with self.connection:
+            self.connection.execute("""
                 CREATE TABLE IF NOT EXISTS ticks (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     contract_id INTEGER,
@@ -41,6 +40,9 @@ class QuoteFetcher(threading.Thread):
                     oq3 INTEGER
                 )
             """)
+
+
+class QuoteFetcher(BaseUtility):
 
     def _store_ticks(self, quotes):
         transformed_quotes = []
@@ -68,11 +70,25 @@ class QuoteFetcher(threading.Thread):
                 ]),
             )
 
-        connection = sqlite3.connect(configuration["misc"]["ticker_plant_path"])
-        with connection:
-            connection.executemany(
+        with self.connection:
+            self.connection.executemany(
                 """
-                    INSERT INTO ticks(contract_id, timestamp, bp1, bq1, bp2, bq2,bp3, bq3, op1, oq1, op2, oq2, op3, oq3)
+                    INSERT INTO ticks(
+                        contract_id,
+                        timestamp,
+                        bp1,
+                        bq1,
+                        bp2,
+                        bq2,
+                        bp3,
+                        bq3,
+                        op1,
+                        oq1,
+                        op2,
+                        oq2,
+                        op3,
+                        oq3
+                    )
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 transformed_quotes,
@@ -86,22 +102,21 @@ class QuoteFetcher(threading.Thread):
             datetime.datetime.utcnow(),
             20,
         )
-        log.info(f'collected {len(events)} events matching filter')
+        log.info('collected %s events matching filter', len(events))
         markets = self.smk_client.get_related_markets(events)
-        log.info(f'collected {len(markets)} markets')
+        log.info('collected %s markets', len(markets))
 
         while True:
             quotes = self.smk_client.get_quotes([market['id'] for market in markets])
             self._store_ticks(quotes)
-            log.info(f'collected the ticks, now sleeping for {configuration["misc"]["sleep_interval"]} seconds')
+            log.info(
+                'collected the ticks, now sleeping for %s seconds',
+                configuration["misc"]["sleep_interval"],
+            )
             time.sleep(configuration["misc"]["sleep_interval"])
 
 
-class Authenticator(threading.Thread):
-    def __init__(self, smk_client):
-        self.smk_client = smk_client
-        super().__init__()
-
+class Authenticator(BaseUtility):
     def run(self):
         self.smk_client.init_session()
         while True:
@@ -109,23 +124,19 @@ class Authenticator(threading.Thread):
             self.smk_client.reauth_session()
 
 
-class LiveQuotePlotter(threading.Thread):
-    def __init__(self, smk_client):
-        self.smk_client = smk_client
-
+class LiveQuotePlotter(BaseUtility):
     def run(self, market_id):
         market = self.smk_client.get_markets([market_id])[0]
         contracts = self.smk_client.get_related_contracts([market])
         contract_ids = ','.join([contract['id'] for contract in contracts])
 
         fig, ax = plt.subplots()
-        connection = sqlite3.connect('tickerplant.db')
 
         def frames(_):
-            with connection:
+            with self.connection:
                 df = pd.read_sql(
                     'SELECT * FROM ticks WHERE contract_id IN ({})'.format(contract_ids),
-                    connection, parse_dates=['timestamp'],
+                    self.connection, parse_dates=['timestamp'],
                 )
             xlim = ax.get_xlim()
             ylim = ax.get_ylim()

@@ -34,14 +34,14 @@ class SmarketsClient:
                     },
                 ).json()
                 self.auth_token = response.get('token')
-        log.info(f'auth token: {self.auth_token}')
+        log.info('auth token: %s', self.auth_token)
 
     def reauth_session(self):
         log.info('renewing session')
         with self.auth_lock:
             response = requests.post(f'{configuration["api"]["base_url"]}sessions/reauth/').json()
             self.auth_token = response.get('token')
-        log.info(f'new auth token: {self.auth_token}')
+            log.info('new auth token: %s', self.auth_token)
 
     def place_bet(
         self,
@@ -51,7 +51,14 @@ class SmarketsClient:
         quantity,
         side,
     ):
-        log.info(f'placing order: m_id {market_id}: c_id {contract_id} \t {side} {quantity} @ {price}')
+        log.info(
+            'placing order: m_id %s: c_id %s\t %s %s @ %s',
+            market_id,
+            contract_id,
+            side,
+            quantity,
+            price,
+        )
         with self.auth_lock:
             response = requests.post(
                 f'{configuration["api"]["base_url"]}orders/',

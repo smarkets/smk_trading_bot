@@ -1,19 +1,6 @@
-import datetime
-import logging
-import threading
-from collections import defaultdict
-from itertools import groupby
-from logging.config import fileConfig
 from pprint import pprint
 
-import requests
-
-import utils
 import client
-
-
-fileConfig('logging.config', disable_existing_loggers=False)
-log = logging.getLogger(__name__)
 
 
 # instantiate client: single instance per session

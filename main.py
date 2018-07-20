@@ -1,12 +1,6 @@
 import logging
 from logging.config import fileConfig
-from typing import Any, Dict, List
-import datetime
-import sqlite3
-import threading
 import time
-
-import requests
 
 import utils
 from config import configuration
@@ -18,11 +12,12 @@ fileConfig('logging.config', disable_existing_loggers=False)
 log = logging.getLogger(__name__)
 
 class TradingBot:
-    def run(self):
-
+    def __init__(self):
         self.quote_fetcher = None
         self.authenticator = None
         self.smk_client = SmarketsClient()
+
+    def run(self):
         while True:
             if not self.quote_fetcher or not self.quote_fetcher.is_alive():
                 self.quote_fetcher = utils.QuoteFetcher(self.smk_client)
@@ -33,7 +28,7 @@ class TradingBot:
             # if not self.the_bot or not self.the_bot.is_alive():
                 # self.the_bot = trading.DumbBot(self.smk_client)
                 # self.the_bot.start()
-            log.info(f'babysitting threads for {configuration["misc"]["sleep_interval"]} seconds')
+            log.info('babysitting threads for %s seconds', configuration["misc"]["sleep_interval"])
             time.sleep(configuration["misc"]["sleep_interval"])
 
 def main():

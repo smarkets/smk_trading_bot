@@ -15,7 +15,7 @@ More info:
 
 ## Project layout
 
-* First, please take a look at the client API walkthrough in `trading.py`.
+* First, please take a look at the client API walkthrough in `tutorial.py`.
 * Update the credentials in configuration_template.toml and rename it to configuration.toml
 * The main bot entrypoint is in main.py
 * Have fun!
