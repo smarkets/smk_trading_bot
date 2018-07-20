@@ -12,6 +12,9 @@ from config import configuration
 
 log = logging.getLogger(__name__)
 
+class OrderPlaceError(Exception):
+    pass
+
 
 class SmarketsClient:
     def __init__(self):
@@ -43,7 +46,7 @@ class SmarketsClient:
             self.auth_token = response.get('token')
             log.info('new auth token: %s', self.auth_token)
 
-    def place_bet(
+    def place_order(
         self,
         market_id,
         contract_id,
@@ -72,13 +75,15 @@ class SmarketsClient:
                 },
                 headers=self._auth_headers(),
             ).json()
+        if response.get('data') is None:
+            raise OrderPlaceError(response.get('error_type'))
         log.info(
             f'''order placed: m_id {market_id}: c_id {contract_id} \t {side} {quantity} @ {price}|'''
             f'''balance:{response["available_balance"]} executed:{response["total_executed_quantity"]}'''
             f''' exposure:{response["exposure"]}'''
         )
 
-    def cancel_bet(self, order_id):
+    def cancel_order(self, order_id):
         with self.auth_lock:
             requests.delete(
                 f'{configuration["api"]["base_url"]}orders/{order_id}/',
@@ -210,7 +215,7 @@ class BacktestClient(SmarketsClient):
         self.market_price_iters = {}
         self.time_interval = time_interval
 
-    def place_bet(
+    def place_order(
         self, market_id, contract_id, price, quantity, side,
     ):
         self.orders[contract_id].append({

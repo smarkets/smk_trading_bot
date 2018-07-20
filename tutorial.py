@@ -1,7 +1,11 @@
+import logging
+from logging.config import fileConfig
 from pprint import pprint
 
 import client
 from utils import LiveQuotePlotter, QuoteFetcher
+
+fileConfig('logging.config', disable_existing_loggers=False)
 
 # instantiate client: single instance per session
 # copy the template from configuration_template.toml and fill it with
@@ -19,7 +23,7 @@ contract_id = '21490523'
 # don't worry about the price: the buy price is set to be very high
 # it's very unlikely someone will match you :)
 
-client.place_bet(
+client.place_order(
     market_id,    # market id
     contract_id,  # contract id
     50,           # percentage price * 10**4, here: 0.5% / 200 decimal / 19900 american
@@ -36,7 +40,7 @@ pprint(client.get_accounts())
 pprint(client.get_account_activity(market_id))
 
 # eeh, changed my mind
-# client.cancel_bet('202547466272702478')
+# client.cancel_order('202547466272702478')
 
 # Lets run the quote fetching!
 QuoteFetcher(client).run()
