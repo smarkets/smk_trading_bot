@@ -1,14 +1,15 @@
 from pprint import pprint
 
 import client
-
+from utils import LiveQuotePlotter, QuoteFetcher
 
 # instantiate client: single instance per session
+# copy the template from configuration_template.toml and fill it with
+# your credentials!
 client = client.SmarketsClient()
 
 # do initial authentication
 client.init_session()
-
 
 # pick some market and contract
 market_id = '6672405'
@@ -36,3 +37,9 @@ pprint(client.get_account_activity(market_id))
 
 # eeh, changed my mind
 # client.cancel_bet('202547466272702478')
+
+# Lets run the quote fetching!
+QuoteFetcher(client).run()
+
+# Show me live prices
+LiveQuoteFetcher(client).run(market_id)

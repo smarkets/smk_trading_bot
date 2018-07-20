@@ -160,11 +160,3 @@ class LiveQuotePlotter(BaseUtility):
             interval=configuration['misc']['sleep_interval'] * 1000,
         )
         plt.show()
-
-
-if __name__ == '__main__':
-    import client
-    import logging
-    logging.basicConfig(format='%(asctime)s %(levelname)s : %(message)s', level=logging.INFO)
-    cli = client.SmarketsClient()
-    QuoteFetcher(cli).run()
