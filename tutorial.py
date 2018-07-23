@@ -37,7 +37,6 @@ client.place_order(
 pprint(client.get_orders(states=['created', 'filled', 'partial']))
 
 pprint(client.get_accounts())
-pprint(client.get_account_activity(market_id))
 
 # eeh, changed my mind
 client.cancel_order('202547466272702478')

@@ -13,36 +13,36 @@ from config import configuration
 
 log = logging.getLogger(__name__)
 
-class BaseUtility(threading.Thread):
-    def __init__(self, smk_client):
+
+def _initialize_ticker_plant(connection):
+    with connection:
+        connection.execute("""
+            CREATE TABLE IF NOT EXISTS ticks (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                contract_id INTEGER,
+                timestamp DATETIME,
+                bp1 INTEGER,
+                bq1 INTEGER,
+                bp2 INTEGER,
+                bq2 INTEGER,
+                bp3 INTEGER,
+                bq3 INTEGER,
+                op1 INTEGER,
+                oq1 INTEGER,
+                op2 INTEGER,
+                oq2 INTEGER,
+                op3 INTEGER,
+                oq3 INTEGER
+            )
+        """)
+
+
+class QuoteFetcher(threading.Thread):
+    def __init__(self, smk_client, markets):
+        self.connection = sqlite3.connect(configuration["misc"]["ticker_plant_path"], check_same_thread=False)
         self.smk_client = smk_client
-        self.connection = sqlite3.connect(configuration["misc"]["ticker_plant_path"])
+        self.markets = markets
         super().__init__()
-
-    def _initialize_ticker_plant(self):
-        with self.connection:
-            self.connection.execute("""
-                CREATE TABLE IF NOT EXISTS ticks (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    contract_id INTEGER,
-                    timestamp DATETIME,
-                    bp1 INTEGER,
-                    bq1 INTEGER,
-                    bp2 INTEGER,
-                    bq2 INTEGER,
-                    bp3 INTEGER,
-                    bq3 INTEGER,
-                    op1 INTEGER,
-                    oq1 INTEGER,
-                    op2 INTEGER,
-                    oq2 INTEGER,
-                    op3 INTEGER,
-                    oq3 INTEGER
-                )
-            """)
-
-
-class QuoteFetcher(BaseUtility):
 
     def _store_ticks(self, quotes):
         transformed_quotes = []
@@ -95,19 +95,9 @@ class QuoteFetcher(BaseUtility):
             )
 
     def run(self):
-        self._initialize_ticker_plant()
-        events = self.smk_client.get_available_events(
-            ['upcoming', 'live'],
-            config['misc']['enabled_sports'],
-            datetime.datetime.utcnow(),
-            20,
-        )
-        log.info('collected %s events matching filter', len(events))
-        markets = self.smk_client.get_related_markets(events)
-        log.info('collected %s markets', len(markets))
-
+        _initialize_ticker_plant(self.connection)
         while True:
-            quotes = self.smk_client.get_quotes([market['id'] for market in markets])
+            quotes = self.smk_client.get_quotes([market['id'] for market in self.markets])
             self._store_ticks(quotes)
             log.info(
                 'collected the ticks, now sleeping for %s seconds',
@@ -116,15 +106,12 @@ class QuoteFetcher(BaseUtility):
             time.sleep(configuration["misc"]["sleep_interval"])
 
 
-class Authenticator(BaseUtility):
-    def run(self):
-        self.smk_client.init_session()
-        while True:
-            time.sleep(configuration["misc"]["reauth_sleep_interval"])
-            self.smk_client.reauth_session()
+class LiveQuotePlotter(threading.Thread):
+    def __init__(self, smk_client):
+        self.connection = sqlite3.connect(configuration["misc"]["ticker_plant_path"], check_same_thread=False)
+        self.smk_client = smk_client
+        super().__init__()
 
-
-class LiveQuotePlotter(BaseUtility):
     def run(self, market_id):
         market = self.smk_client.get_markets([market_id])[0]
         contracts = self.smk_client.get_related_contracts([market])
