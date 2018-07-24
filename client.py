@@ -66,7 +66,7 @@ class SmarketsClient:
         )
         response_body = response.json()
         if response.status_code != 200:
-            raise OrderPlaceError(response.get('error_type'))
+            raise OrderPlaceError(response_body.get('error_type'))
         log.info(
             f'''order placed: m_id {market_id}: c_id {contract_id} \t {side} {quantity} @ {price}|'''
             f'''balance:{response_body["available_balance"]} executed:{response_body["total_executed_quantity"]}'''
