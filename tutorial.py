@@ -42,7 +42,4 @@ pprint(client.get_accounts())
 # client.cancel_order('202547466272702478')
 
 # Lets run the quote fetching!
-QuoteFetcher(client).run()
-
-# Show me live prices
-LiveQuotePlotter(client).run(market_id)
+QuoteFetcher(client, client.get_markets([market_id])).run()
