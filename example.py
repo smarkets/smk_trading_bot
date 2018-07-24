@@ -24,35 +24,45 @@ class ExampleBot(threading.Thread):
         def mean(l):
             return float(sum(l)) / len(l)
 
-        for position in positions:
-            print(position)
-
         for contract in live_contracts:
             with self.connection:
-                prices = self.connection.execute(
+                prices = list(self.connection.execute(
                     'SELECT bp1, op1 FROM ticks WHERE contract_id = {} AND bp1 is not null AND op1 is not null  ORDER BY timestamp DESC LIMIT 11'.format(contract['id'])
-                )
-            prices = list(prices)
+                ))
             if len(prices) == 0:
                 log.warning('No quotes for the contract: %s', contract)
                 continue
             else:
-                ma = prices[1:]
-                current_price = prices[0]
-                print(ma, current_price)
-                if current_price[0] > mean([price[0] for price in ma]):
-                    print('BUY', current_price[0],mean([price[0] for price in ma]) )
-                elif current_price[1] < mean([price[1] for price in ma]):
-                    print('SELL', current_price[1],mean([price[1] for price in ma]) )
+                current_price, past_prices = prices[0], prices[1:]
+                bprice_mean = mean([price[0] for price in past_prices])
+                oprice_mean = mean([price[1] for price in past_prices])
+                if current_price[0] > bprice_mean:
+                    log.info('BUY', current_price[0], bprice_mean)
+                    self.smk_client.place_order(
+                        contract['market_id'],
+                        contract['id'],
+                        current_price,
+                        FIXED_QUANTITY,
+                        'buy',
+                    )
+                elif current_price[1] < oprice_mean:
+                    log.info('SELL', current_price[1], oprice_mean)
+                    self.smk_client.place_order(
+                        contract['market_id'],
+                        contract['id'],
+                        current_price,
+                        FIXED_QUANTITY,
+                        'sell',
+                    )
+
 
     def run(self):
-        #1. TODO fetch the markets and contracts
-        contracts = self.smk_client.get_related_contracts(self.markets)
+        # 5. TODO fetch the contracts
+        # contracts = ...
         while True:
             loop_start = datetime.datetime.utcnow()
-            ###
-            # 2. TODO fetch the positions
-            positions = self.smk_client.get_orders(states=['created', 'filled', 'partial'])
+            # 6. TODO fetch the positions
+            # positions = ...
 
             self.strategy(contracts, positions)
 

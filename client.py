@@ -7,7 +7,6 @@ from collections import defaultdict
 
 import requests
 
-import pandas as pd
 from config import configuration
 
 log = logging.getLogger(__name__)

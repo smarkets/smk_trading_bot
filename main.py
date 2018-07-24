@@ -19,19 +19,23 @@ class TradingBot:
         self.authenticator = None
         self.the_bot = None
         self.smk_client = SmarketsClient()
-        self.smk_client.init_session()
+        # 1. TODO Authenticate using SmarketsClient
+        # ...
 
     def run(self):
-        events = self.smk_client.get_events(['940308']) # 939730
-        print(events)
-        markets = self.smk_client.get_related_markets(events)
+        # 2. TODO Fetch the event. Try out ids: 939730, 939734, 939772 or pick yours
+        # events = ...
+        # 3. TODO Fetch the markets for the event
+        # markets = ...
+
         while True:
             if not self.quote_fetcher or not self.quote_fetcher.is_alive():
                 self.quote_fetcher = utils.QuoteFetcher(self.smk_client, markets)
                 self.quote_fetcher.start()
-            if not self.the_bot or not self.the_bot.is_alive():
-                self.the_bot = example.ExampleBot(self.smk_client, markets)
-                self.the_bot.start()
+            # 4. TODO Start the bot (uncomment following lines)
+            # if not self.the_bot or not self.the_bot.is_alive():
+                # self.the_bot = example.ExampleBot(self.smk_client, markets)
+                # self.the_bot.start()
             log.info('babysitting threads for %s seconds', configuration["misc"]["sleep_interval"])
             time.sleep(configuration["misc"]["sleep_interval"])
 

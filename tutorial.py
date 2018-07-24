@@ -16,7 +16,7 @@ client = client.SmarketsClient()
 client.init_session()
 
 # pick some market and contract
-market_id = '6672405'
+market_id = '7289490'
 contract_id = '21490523'
 
 # place some bets
