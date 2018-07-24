@@ -64,7 +64,7 @@ class SmarketsClient:
             },
             headers=self._auth_headers(),
         ).json()
-        if response.get('data') is None:
+        if response.status_code != 200:
             raise OrderPlaceError(response.get('error_type'))
         log.info(
             f'''order placed: m_id {market_id}: c_id {contract_id} \t {side} {quantity} @ {price}|'''
