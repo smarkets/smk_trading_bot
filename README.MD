@@ -3,7 +3,7 @@
 ## Preliminaries
 1. Clone the repository
 2. Create python3 virtualenv
-```virtualenv venv --python=python3```
+```virtualenv venv --python=python3.6```
 3. Install the dependencies
 ```pip install -r requirements.txt```
 
