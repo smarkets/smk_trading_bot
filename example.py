@@ -13,10 +13,12 @@ fileConfig('logging.config', disable_existing_loggers=False)
 
 log = logging.getLogger(__name__)
 
+FIXED_QUANTITY = 1000 # 10p
+
 class ExampleBot(threading.Thread):
     def __init__(self, smk_client, markets):
         self.connection = sqlite3.connect(configuration["misc"]["ticker_plant_path"], check_same_thread=False)
-        self.smk_client = smk_client
+        self.client = smk_client
         self.markets = markets
         super().__init__()
 
@@ -34,23 +36,26 @@ class ExampleBot(threading.Thread):
                 continue
             else:
                 current_price, past_prices = prices[0], prices[1:]
+                current_bid_price, current_offer_price = current_price
                 bprice_mean = mean([price[0] for price in past_prices])
                 oprice_mean = mean([price[1] for price in past_prices])
-                if current_price[0] > bprice_mean:
-                    log.info('BUY', current_price[0], bprice_mean)
+                if current_bid_price > bprice_mean:
+                    log.info('BUY', current_bid_price, bprice_mean)
+                    # 7a. TODO buy contract at current price, FIXED_QUANTITY
                     self.smk_client.place_order(
                         contract['market_id'],
                         contract['id'],
-                        current_price,
+                        current_bid_price,
                         FIXED_QUANTITY,
                         'buy',
                     )
-                elif current_price[1] < oprice_mean:
-                    log.info('SELL', current_price[1], oprice_mean)
+                elif current_offer_price < oprice_mean:
+                    log.info('SELL', current_offer_price, oprice_mean)
+                    # 7b. TODO sell contract at current price, FIXED_QUANTITY
                     self.smk_client.place_order(
                         contract['market_id'],
                         contract['id'],
-                        current_price,
+                        current_offer_price,
                         FIXED_QUANTITY,
                         'sell',
                     )

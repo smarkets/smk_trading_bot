@@ -17,7 +17,7 @@ client.init_session()
 
 # pick some market and contract
 market_id = '7289490'
-contract_id = '21490523'
+contract_id = '24174814'
 
 # place some bets
 # don't worry about the price: the buy price is set to be very high
@@ -39,7 +39,7 @@ pprint(client.get_orders(states=['created', 'filled', 'partial']))
 pprint(client.get_accounts())
 
 # eeh, changed my mind
-client.cancel_order('202547466272702478')
+# client.cancel_order('202547466272702478')
 
 # Lets run the quote fetching!
 QuoteFetcher(client).run()
