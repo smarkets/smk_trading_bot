@@ -63,13 +63,14 @@ class SmarketsClient:
                 'side': side,
             },
             headers=self._auth_headers(),
-        ).json()
+        )
+        response_body = response.json()
         if response.status_code != 200:
             raise OrderPlaceError(response.get('error_type'))
         log.info(
             f'''order placed: m_id {market_id}: c_id {contract_id} \t {side} {quantity} @ {price}|'''
-            f'''balance:{response["available_balance"]} executed:{response["total_executed_quantity"]}'''
-            f''' exposure:{response["exposure"]}'''
+            f'''balance:{response_body["available_balance"]} executed:{response_body["total_executed_quantity"]}'''
+            f''' exposure:{response_body["exposure"]}'''
         )
 
     def cancel_order(self, order_id):
