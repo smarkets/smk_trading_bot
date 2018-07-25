@@ -40,11 +40,11 @@ class ExampleBot(threading.Thread):
                 bprice_mean = mean([price[0] for price in past_prices])
                 oprice_mean = mean([price[1] for price in past_prices])
                 if current_bid_price > bprice_mean:
-                    log.info('BUY', contract['id'], current_bid_price, bprice_mean)
+                    log.info('BUY contract %s: bid %s higher than mean %s', contract['id'], current_bid_price, bprice_mean)
                     # 7a. TODO buy contract at current bid price, FIXED_QUANTITY
                     # ...
                 elif current_offer_price < oprice_mean:
-                    log.info('SELL', contract['id'], current_offer_price, oprice_mean)
+                    log.info('SELL contract %s: offer %s lower than mean %s', contract['id'], current_offer_price, oprice_mean)
                     # 7b. TODO sell contract at current offer price, FIXED_QUANTITY
                     # ...
 
