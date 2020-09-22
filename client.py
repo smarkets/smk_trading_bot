@@ -79,6 +79,12 @@ class SmarketsClient:
             headers=self._auth_headers(),
         )
 
+    def cancel_all_orders(self, market_id):
+        requests.delete(
+            f'{configuration["api"]["base_url"]}orders/?market_id={market_id}',
+            headers=self._auth_headers(),
+        )
+
     def get_orders(self, states):
         orders = []
         states_to_fetch = '&'.join([f'states={state}' for state in states])
