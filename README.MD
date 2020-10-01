@@ -1,21 +1,13 @@
-# Smarkets Trading Bot: workshop skeleton
+# Python Sample Code
 
-## Preliminaries
-1. Clone the repository
-2. Create python3 virtualenv
-```virtualenv venv --python=python3.6```
-3. Install the dependencies
-```pip install -r requirements.txt```
+[Smarkets HTTP API documentation](https://docs.smarkets.com/#/)
 
-Please have a read about the different betting formats:
-[smarkets help center](https://help.smarkets.com/hc/en-gb/articles/214071849-What-are-the-different-betting-odds-formats)
+[Odds Table](https://help.smarkets.com/hc/en-gb/articles/115003210649-Why-can-t-I-bet-at-specific-odds-#:~:text=Our%20underlying%20system%20matches%20bets,as%20displayed%20on%20the%20exchange.&text=This%20can%20lead%20to%20instances,will%20not%20be%20able%20to.)
 
-More info:
-[betting education @ smarkets help center](https://help.smarkets.com/hc/en-gb/categories/201728845-Betting-education)
+[Developers Forum](https://community.smarkets.com/c/developers/20)
 
-## Project layout
+## Installation
 
-* First, please take a look at the client API walkthrough in `tutorial.py`.
+* Clone the repositary
+* Take a look at the client API walkthrough in `tutorial.py`.
 * Update the credentials in configuration_template.toml and rename it to configuration.toml
-* The main bot entrypoint is in main.py
-* Have fun!
