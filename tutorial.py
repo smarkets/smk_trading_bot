@@ -3,7 +3,6 @@ from logging.config import fileConfig
 from pprint import pprint
 
 import client
-from utils import QuoteFetcher
 
 fileConfig('logging.config', disable_existing_loggers=False)
 
@@ -20,8 +19,6 @@ market_id = '7289490'
 contract_id = '24174814'
 
 # place some bets
-# don't worry about the price: the buy price is set to be very high
-# it's very unlikely someone will match you :)
 
 client.place_order(
     market_id,    # market id
@@ -40,6 +37,3 @@ pprint(client.get_accounts())
 
 # eeh, changed my mind
 # client.cancel_order('202547466272702478')
-
-# Lets run the quote fetching!
-QuoteFetcher(client, client.get_markets([market_id])).run()
