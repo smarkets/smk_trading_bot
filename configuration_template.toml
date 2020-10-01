@@ -1,13 +1,7 @@
 [auth]
-login = "your_login_here"
-password = "password_plz"
+login = "your_email_address"
+password = "your_password"
 
 [api]
 base_url = "https://api.smarkets.com/v3/"
 chunk_size = 20
-
-[misc]
-bot_tick_interval = 30
-sleep_interval = 10
-reauth_sleep_interval = 600
-ticker_plant_path = "tickerplant.db"
