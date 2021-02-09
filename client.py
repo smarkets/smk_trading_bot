@@ -104,6 +104,7 @@ class SmarketsClient:
         start_datetime_max: datetime.datetime,
         limit: int,
     ):
+        start_datetime_max=start_datetime_max.strftime("%Y-%m-%dT%H:%M:%SZ")
         states_filter = '&'.join([f'states={state}' for state in states])
         types_filter = '&'.join([f'types={type_}' for type_ in types])
         page_filter = (
