@@ -1,7 +1,6 @@
 import datetime
 import logging
-from typing import Any, Dict, List
-from collections import defaultdict
+import typing as t
 
 import requests
 
@@ -16,6 +15,10 @@ class OrderPlaceError(Exception):
 class SmarketsClient:
     def __init__(self):
         self.auth_token = None
+
+    @classmethod
+    def _format_datetime_for_api_request(cls, timestamp: datetime.datetime) -> str:
+        return timestamp.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     def _auth_headers(self):
         return {'Authorization': 'Session-Token ' + self.auth_token}
@@ -99,17 +102,24 @@ class SmarketsClient:
 
     def get_available_events(
         self,
-        states: List[str],
-        types: List[str],
+        states: t.List[str],
+        types: t.List[str],
         start_datetime_max: datetime.datetime,
         limit: int,
+        *,
+        start_datetime_min: t.Optional[datetime.datetime] = None,
     ):
-        start_datetime_max = start_datetime_max.strftime("%Y-%m-%dT%H:%M:%SZ")
+        start_datetime_max = self._format_datetime_for_api_request(start_datetime_max)
+
+        if start_datetime_min:
+            start_datetime_min = self._format_datetime_for_api_request(start_datetime_min)
+
         states_filter = '&'.join([f'states={state}' for state in states])
         types_filter = '&'.join([f'types={type_}' for type_ in types])
         page_filter = (
-            f'?{states_filter}&{types_filter}&sort=id&'
-            f'limit={limit}&start_datetime_max={start_datetime_max}'
+            f'?{states_filter}&{types_filter}&sort=id' + 
+            f'&limit={limit}&start_datetime_max={start_datetime_max}' + 
+            (f'&start_datetime_min={start_datetime_min}' if start_datetime_min else '')
         )
         events = []
         while page_filter:
@@ -120,12 +130,12 @@ class SmarketsClient:
 
         return events
 
-    def get_events(self, event_ids: List[str]):
+    def get_events(self, event_ids: t.List[str]):
         event_ids_filter = '&'.join([f'ids={event_id}' for event_id in event_ids])
         request_url = f'{configuration["api"]["base_url"]}events/?{event_ids_filter}'
         return self._client_wrapper(request_url).get('events')
 
-    def get_markets(self, market_ids: List[str], with_volumes: bool=False):
+    def get_markets(self, market_ids: t.List[str], with_volumes: bool=False):
         markets = ','.join(market_ids)
         request_url = f'{configuration["api"]["base_url"]}markets/{markets}/?with_volumes={with_volumes}'
         return self._client_wrapper(request_url).get('markets')
@@ -163,7 +173,7 @@ class SmarketsClient:
             i += 1
         return contracts
 
-    def get_quotes(self, market_ids: List[str]):
+    def get_quotes(self, market_ids: t.List[str]):
         quotes = []
         i = 0
         chunk_size = configuration["api"]["chunk_size"]
@@ -186,6 +196,7 @@ class SmarketsClient:
         ).json()
         return response
 
-    def _client_wrapper(self, url: str) -> Dict[str, Any]:
+    @classmethod
+    def _client_wrapper(cls, url: str) -> t.Dict[str, t.Any]:
         log.info(f'calling url: {url}')
         return requests.get(url).json()
